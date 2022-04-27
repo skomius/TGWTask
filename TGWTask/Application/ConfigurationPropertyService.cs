@@ -19,7 +19,7 @@ namespace TGWTask.Application
 
         public string GetConfigurationProperty(string propertyName)
         {
-          //:D gal kazkaip galima ir geriau
+          //:D should be some better way then this
           var configurations = _layerRepository.GetLayers().Select(x => JsonConvert.DeserializeObject<IDictionary<string, string>>(JsonConvert.SerializeObject(x.Configuration)));
           return configurations.Select(x => x[propertyName]).LastOrDefault(x => x != null);
         }
