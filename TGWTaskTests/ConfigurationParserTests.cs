@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using NSubstitute;
 using System;
 using System.IO;
 using TGWTask.Business;
@@ -14,14 +15,13 @@ namespace TGWTaskTests
         {
             var rawConfig = File.ReadAllText("Base_Config.txt");
 
-            var configurationParser = new ConfigurationParser();
-            var configProperties = configurationParser.Parser(rawConfig);
+            var rawConfigurationProvider = Substitute.For<IRawConfigurationProvider>();
+            rawConfigurationProvider.GetRawConfiguration("Base_Config.txt").Returns(File.ReadAllText("Base_Config.txt"));
 
-            var serialize = JsonConvert.SerializeObject(configProperties);
-            var configuration = JsonConvert.DeserializeObject<Configuration>(serialize);
+            var configurationParser = new ConfigurationParser(rawConfigurationProvider);
+            var config = configurationParser.Parser("Base_Config.txt");
 
-            Assert.Equal(6, configProperties.Count);
-            Assert.Equal("normal", configProperties["powerSupply"]);
+            Assert.Equal(PowerSupply.normal, config.PowerSupply);
         }
     }
 }
