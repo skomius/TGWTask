@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TGWTask.Application;
+using TGWTask.Business;
+using TGWTask.Infrastructure;
+using TGWTask.Repositories;
 
 namespace TWGTask
 {
@@ -11,125 +15,62 @@ namespace TWGTask
         static void Main(string[] args)
         {
             var serviceProvider = new ServiceCollection()
-            .AddSingleton<IFooService, FooService>()
-            .AddSingleton<IBarService, BarService>()
+            .AddSingleton<IConfigurationPropertyService, ConfigurationPropertyService>()
+            .AddSingleton<ILayerService, LayerService>()
+            .AddSingleton<ILayerRepository, LayerRepository>()
+            .AddSingleton<IConfigurationParser, ConfigurationParser>()
+            .AddSingleton<IRawConfigurationProvider, RawConfigurationFromLocalFileProvider>()
             .BuildServiceProvider();
 
-            Parser.Default.ParseArguments<AddOptions, CommitOptions, CloneOptions>(new String[] { "--help" });
+            Parser.Default.ParseArguments<GetConfigurationPropertyOptions, AddNewLayerOptions>(new String[] { "--help" });
 
             while (true)
             {
                 var text = Console.ReadLine().Split();
-                var parse = Parser.Default.ParseArguments<AddOptions, CommitOptions, CloneOptions>(text)
+                var parse = Parser.Default.ParseArguments<GetConfigurationPropertyOptions, AddNewLayerOptions>(text)
                     .MapResult(
-                        (AddOptions opts) => RunAddAndReturnExitCode(opts),
-                        (CommitOptions opts) => RunCommitAndReturnExitCode(opts),
-                        (CloneOptions opts) => RunCloneAndReturnExitCode(opts, serviceProvider.GetRequiredService<IBarService>()),
+                        (GetConfigurationPropertyOptions opts) => GetConfigurationProperty(opts, serviceProvider.GetRequiredService<IConfigurationPropertyService>()),
+                        (AddNewLayerOptions opts) => AddNewLayer(opts, serviceProvider.GetRequiredService<ILayerService>()),
                       (errs) => 1);
 
             }
         }
 
-        private static int RunCloneAndReturnExitCode(CloneOptions opts, IBarService barService)
+        private static int AddNewLayer(AddNewLayerOptions opts, ILayerService layerService)
         {
-            Console.WriteLine("Clone");
+            layerService.AddLayer(opts.Level, opts.ConfigurationPath, opts.LayerType);
+            Console.WriteLine("Configuration layer added");
             return 0;
         }
 
-        private static int RunCommitAndReturnExitCode(CommitOptions opts)
+        private static int GetConfigurationProperty(GetConfigurationPropertyOptions opts, IConfigurationPropertyService configurationPropertyService )
         {
-            Console.WriteLine("Commint");
+            var value = configurationPropertyService.GetConfigurationProperty(opts.PropertyName);
+            if (value == null)
+                Console.WriteLine("Property not found");
+            else
+                Console.WriteLine(value);
             return 0;
         }
 
-        private static int RunAddAndReturnExitCode(AddOptions opts)
+        [Verb("GetConfigPropery", HelpText = "Gets property from highest level where it is set")]
+        class GetConfigurationPropertyOptions
         {
-            Console.WriteLine("Add");
-            return 0;
+            [Option(HelpText = "PropertyName")]
+            public string PropertyName { get; set; }
         }
 
-        private static void HandleParseError(IEnumerable<Error> errs)
+        [Verb("AddNewLayer", HelpText = "Add new configuration layer")]
+        class AddNewLayerOptions
         {
-            if (errs.IsVersion())
-            {
-                Console.WriteLine("Version Request");
-                return;
-            }
+            [Option(HelpText = "Configuration path")]
+            public string ConfigurationPath { get; set; }
 
-            if (errs.IsHelp())
-            {
-                Console.WriteLine("Help Request");
-                return;
-            }
-            Console.WriteLine("Parser Fail");
-        }
+            [Option(HelpText = "Layer level")]
+            public int Level { get; set; }
 
-        private static void Run(Options opts)
-        {
-            Console.WriteLine("Parser success");
-        }
-
-        [Verb("add", HelpText = "Add file contents to the index.")]
-        class AddOptions
-        {
-            [Option("stdin", Default = false, HelpText = "Read from stdin")]
-            public bool stdin { get; set; }
-
-            [Value(0, MetaName = "offset", HelpText = "File offset.")]
-            public long? Offset { get; set; }
-        }
-
-        [Verb("commit", HelpText = "Record changes to the repository.")]
-        class CommitOptions
-        {
-            //commit options here
-        }
-
-        [Verb("clone", HelpText = "Clone a repository into a new directory.")]
-        class CloneOptions
-        {
-            //clone options here
-        }
-
-        public interface IFooService
-        {
-            void DoThing(int number);
-        }
-
-        public interface IBarService
-        {
-            void DoSomeRealWork();
-        }
-
-        public class BarService : IBarService
-        {
-            private readonly IFooService _fooService;
-            public BarService(IFooService fooService)
-            {
-                _fooService = fooService;
-            }
-
-            public void DoSomeRealWork()
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    _fooService.DoThing(i);
-                }
-            }
-        }
-
-        public class FooService : IFooService
-        {
-            private readonly ILogger<FooService> _logger;
-            public FooService(ILoggerFactory loggerFactory)
-            {
-                _logger = loggerFactory.CreateLogger<FooService>();
-            }
-
-            public void DoThing(int number)
-            {
-                _logger.LogInformation($"Doing the thing {number}");
-            }
+            [Option(HelpText = "Layer type")]
+            public LayerType LayerType { get; set; }
         }
     }
 }
