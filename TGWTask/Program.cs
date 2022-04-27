@@ -4,7 +4,7 @@ using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TGWTask.Application;
-using TGWTask.Business;
+using TGWTask.Domain;
 using TGWTask.Infrastructure;
 using TGWTask.Repositories;
 

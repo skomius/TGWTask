@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TGWTask.Business
+namespace TGWTask.Domain
 {
-    public enum PowerSupply
+    public enum InboundStrategy
     {
         empty,
-        normal,
-        big
+        random,
+        optimized
     }
 }
