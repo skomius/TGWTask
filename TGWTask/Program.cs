@@ -53,7 +53,7 @@ namespace TWGTask
             return 0;
         }
 
-        [Verb("GetConfigPropery", HelpText = "Gets property from highest level where it is set")]
+        [Verb("GetConfigProperty", HelpText = "Gets property from highest level where it is set")]
         class GetConfigurationPropertyOptions
         {
             [Option(HelpText = "PropertyName")]
