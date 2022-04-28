@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 using NSubstitute;
 using System;
 using System.IO;
-using TGWTask.Business;
+using TGWTask.Domain;
 using TGWTask.Infrastructure;
 using Xunit;
 
