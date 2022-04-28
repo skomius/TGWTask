@@ -13,8 +13,6 @@ namespace TGWTaskTests
         [Fact]
         public void ConfigurationParser_ShouldReturnParsedProperties()
         {
-            var rawConfig = File.ReadAllText("Base_Config.txt");
-
             var rawConfigurationProvider = Substitute.For<IRawConfigurationProvider>();
             rawConfigurationProvider.GetRawConfiguration("Base_Config.txt").Returns(File.ReadAllText("Base_Config.txt"));
 
